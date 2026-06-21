@@ -1,0 +1,2111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>리스닝 문제 프로그램</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #1e2430;
+      --muted: #667085;
+      --line: #d9dee8;
+      --accent: #2457d6;
+      --accent-soft: #e8eefc;
+      --good: #127a43;
+      --review: #b45309;
+      --shadow: 0 14px 36px rgba(31, 41, 55, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, "Malgun Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 7px;
+      min-height: 38px;
+      padding: 0 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.active {
+      background: var(--accent-soft);
+      border-color: #adc0f6;
+      color: #173b98;
+    }
+
+    button.danger {
+      border-color: #fecaca;
+      background: #fff1f2;
+      color: #b91c1c;
+    }
+
+    .menu {
+      min-height: 100vh;
+      padding: 32px;
+      display: grid;
+      align-content: start;
+      gap: 20px;
+    }
+
+    .menu-head {
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+    }
+
+    h1, h2 {
+      margin: 0;
+      line-height: 1.25;
+    }
+
+    h1 { font-size: 30px; }
+    h2 { font-size: 24px; }
+
+    .sub {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .set-grid {
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .set-card {
+      min-height: 150px;
+      padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      display: grid;
+      align-content: space-between;
+      text-align: left;
+    }
+
+    .set-card strong {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .score-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .score-box strong {
+      display: block;
+      font-size: 28px;
+      margin-top: 6px;
+    }
+
+    .review-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .review-table th,
+    .review-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px;
+      text-align: left;
+      font-size: 14px;
+      vertical-align: top;
+    }
+
+    .review-table th {
+      background: #f1f4f9;
+      color: #3d4657;
+    }
+
+    .review-table tr.correct-row td {
+      background: #f6fcf8;
+    }
+
+    .review-table tr.wrong-row td {
+      background: #fff8f2;
+    }
+
+    .review-table tr.blank-row td {
+      background: #fafafa;
+      color: var(--muted);
+    }
+
+    .app {
+      display: none;
+      grid-template-columns: 320px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .results-page {
+      display: none;
+      min-height: 100vh;
+      padding: 32px;
+      align-content: start;
+      gap: 18px;
+    }
+
+    aside {
+      border-right: 1px solid var(--line);
+      background: #fbfcfe;
+      padding: 20px;
+      overflow: auto;
+    }
+
+    main {
+      padding: 28px;
+      display: grid;
+      align-content: start;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .player, .work {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .work {
+      padding: 22px;
+      gap: 16px;
+    }
+
+    audio { width: 100%; }
+
+    .controls, .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .meta, .headline {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .headline {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 14px;
+    }
+
+    .badge {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 10px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .question-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .question-btn {
+      width: 100%;
+      text-align: left;
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      min-height: 44px;
+      font-weight: 700;
+    }
+
+    .question-btn .num, .choice .letter {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #eef1f6;
+      color: #3d4657;
+      font-size: 13px;
+    }
+
+    .question-btn.done .num {
+      background: #e6f4ed;
+      color: var(--good);
+    }
+
+    .question-btn.review .num {
+      background: #fff3df;
+      color: var(--review);
+    }
+
+    .progress {
+      height: 10px;
+      background: #e7ebf2;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--accent);
+      transition: width 160ms ease;
+    }
+
+    .prompt {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+
+    .choices {
+      display: grid;
+      gap: 10px;
+    }
+
+    .choice {
+      width: 100%;
+      min-height: 48px;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 15px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .choice.selected {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: #173b98;
+    }
+
+    .choice.selected .letter {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .choice.correct {
+      border-color: var(--good);
+      background: #e6f4ed;
+      color: var(--good);
+    }
+
+    .choice.correct .letter {
+      background: var(--good);
+      color: #fff;
+    }
+
+    .choice.wrong {
+      border-color: #c2410c;
+      background: #fff0e8;
+      color: #9a3412;
+    }
+
+    .choice.wrong .letter {
+      background: #c2410c;
+      color: #fff;
+    }
+
+    .result {
+      display: none;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .result.correct {
+      display: block;
+      border-color: #b7e1c8;
+      background: #f0faf4;
+      color: var(--good);
+    }
+
+    .result.wrong {
+      display: block;
+      border-color: #fed7aa;
+      background: #fff7ed;
+      color: #9a3412;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      font: 18px/1.65 Arial, "Malgun Gothic", sans-serif;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    @media (max-width: 880px) {
+      .set-grid { grid-template-columns: 1fr; }
+      .menu-head { display: block; }
+      .app { grid-template-columns: 1fr; }
+      aside {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        max-height: 330px;
+      }
+      main, .menu { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <section id="menu" class="menu">
+    <div class="menu-head">
+      <div>
+        <h1>리스닝 문제 프로그램</h1>
+        <p class="sub">세트 1부터 세트 5까지 선택해서 풀이합니다.</p>
+      </div>
+      <button class="danger" id="clearAllAnswers">전체 정답 지우기</button>
+    </div>
+    <div id="setGrid" class="set-grid"></div>
+  </section>
+
+  <div id="app" class="app">
+    <aside>
+      <button id="backToMenu">메뉴</button>
+      <h1 id="setTitle">세트 1</h1>
+      <p class="sub">문장 재생 후 풀이 시간 20초</p>
+      <div class="progress" aria-label="진행률"><span id="progressBar"></span></div>
+      <p class="sub"><span id="doneCount">0</span>/<span id="totalCount">0</span> 완료</p>
+      <div id="questionList" class="question-list"></div>
+    </aside>
+
+    <main>
+      <section class="panel player">
+        <audio id="audio" controls preload="metadata"></audio>
+        <div class="controls">
+          <button class="primary" id="repeatCurrent">현재 문제 반복</button>
+          <button id="pauseAudio">일시정지</button>
+          <button id="prevQuestion">이전</button>
+          <button id="nextQuestion">다음</button>
+        </div>
+        <div class="meta">
+          <span id="timeNow">00:00</span>
+          <span id="listenMode">문제별 재생</span>
+        </div>
+      </section>
+
+      <section class="panel work">
+        <div class="headline">
+          <h2 id="questionTitle">문제 1</h2>
+          <span class="badge" id="timeRange">문장 00:00</span>
+        </div>
+        <p class="prompt">오디오를 듣고 가장 자연스러운 응답을 고르세요.</p>
+        <div id="choices" class="choices"></div>
+        <div id="resultBox" class="result"></div>
+        <div class="status-row">
+          <button class="primary" id="checkAnswer">정답 확인</button>
+          <button class="primary" id="showSetResults">세트 정답 확인</button>
+          <button id="clearStatus">표시 지우기</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <section id="resultsPage" class="results-page">
+    <div class="menu-head">
+      <div>
+        <h1 id="resultsTitle">세트 결과</h1>
+        <p class="sub" id="resultsSummary">채점 결과</p>
+      </div>
+      <div class="controls">
+        <button id="resultsBackToSet">문제로 돌아가기</button>
+        <button class="primary" id="resultsBackToMenu">메뉴</button>
+      </div>
+    </div>
+    <div class="score-grid">
+      <div class="score-box">정답<strong id="scoreCorrect">0</strong></div>
+      <div class="score-box">오답<strong id="scoreWrong">0</strong></div>
+      <div class="score-box">미응답<strong id="scoreBlank">0</strong></div>
+    </div>
+    <table class="review-table">
+      <thead>
+        <tr>
+          <th>문제</th>
+          <th>내 답</th>
+          <th>정답</th>
+          <th>결과</th>
+        </tr>
+      </thead>
+      <tbody id="reviewBody"></tbody>
+    </table>
+  </section>
+
+  <script>
+    const SETS = {
+  "set1": {
+    "title": "세트 1",
+    "audio": "세트1_문장간격20초.wav",
+    "questions": [
+      {
+        "number": 1,
+        "choices": {
+          "A": "Yes, I updated it this morning.",
+          "B": "The folder is on my desktop.",
+          "C": "I prefer working at night.",
+          "D": "The printer ran out of paper."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 2,
+        "choices": {
+          "A": "The meeting room is on the second floor.",
+          "B": "That sounds like a good plan.",
+          "C": "I already printed the agenda.",
+          "D": "It starts at 10 a.m."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 3,
+        "choices": {
+          "A": "It's been extended until Friday.",
+          "B": "I registered last semester.",
+          "C": "The registrar's office is closed.",
+          "D": "I forgot my student ID."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 4,
+        "choices": {
+          "A": "I think I saw it in the lab.",
+          "B": "I bought a new notebook yesterday.",
+          "C": "The lab closes at 6.",
+          "D": "I have a meeting now."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 5,
+        "choices": {
+          "A": "It's located downtown.",
+          "B": "I was really nervous at first.",
+          "C": "I'll send the email later.",
+          "D": "It starts at three."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 6,
+        "choices": {
+          "A": "Yes, through the student portal.",
+          "B": "The report is very long.",
+          "C": "I forgot to bringmy laptop.",
+          "D": "It was due yesterday."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 7,
+        "choices": {
+          "A": "The storage room is upstairs.",
+          "B": "Sure, give me a minute.",
+          "C": "I already checked the inventory.",
+          "D": "They're very heavy."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 8,
+        "choices": {
+          "A": "The topic is very interesting.",
+          "B": "It depends on how detailed our proposal is.",
+          "C": "Isubmitted mine yesterday.",
+          "D": "The approval form is online."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 9,
+        "choices": {
+          "A": "The professor wasn't feeling well.",
+          "B": "I prefer afternoon classes.",
+          "C": "The classroom is large.",
+          "D": "I took notes anyway."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 10,
+        "choices": {
+          "A": "The presentation was long.",
+          "B": "I already prepared my slides.",
+          "C": "We might ask the instructor for permission.",
+          "D": "It starts at noon."
+        },
+        "answer": "C"
+      },
+      {
+        "number": 11,
+        "choices": {
+          "A": "Only once, last semester.",
+          "B": "It's installed on every computer.",
+          "C": "I prefer handwritten notes.",
+          "D": "The computer lab is closed."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 12,
+        "choices": {
+          "A": "The calculator is broken.",
+          "B": "Yes, just to be safe.",
+          "C": "I finished the assignment.",
+          "D": "It was very difficult."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 13,
+        "choices": {
+          "A": "On the third floor near the elevators.",
+          "B": "I have an appointment today.",
+          "C": "She's very helpful.",
+          "D": "I forgot to call her."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 14,
+        "choices": {
+          "A": "Yes, I already registered online.",
+          "B": "It was very informative.",
+          "C": "The workshop room is small.",
+          "D": "I didn't bring my notebook."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 15,
+        "choices": {
+          "A": "Yes, until almost 2 a.m.",
+          "B": "I prefer studying in the morning.",
+          "C": "The exam is tomorrow.",
+          "D": "I need a new textbook."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 16,
+        "choices": {
+          "A": "She's very responsible and organized.",
+          "B": "I sent her an email.",
+          "C": "The research is difficult.",
+          "D": "The team meeting is tomorrow."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 17,
+        "choices": {
+          "A": "They should be here by Thursday.",
+          "B": "I returned mine yesterday.",
+          "C": "The library is quiet.",
+          "D": "I lost my card."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 18,
+        "choices": {
+          "A": "Sure, I'll lower it a bit.",
+          "B": "It's very hot outside.",
+          "C": "The window is open.",
+          "D": "I forgot my jacket."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 19,
+        "choices": {
+          "A": "About three hours.",
+          "B": "The lab was crowded.",
+          "C": "I worked in the lab yesterday.",
+          "D": "The report is due tomorrow."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 20,
+        "choices": {
+          "A": "We should add one more example.",
+          "B": "I printed the paper.",
+          "C": "The argument is interesting.",
+          "D": "I submitted it online."
+        },
+        "answer": "A"
+      }
+    ],
+    "timings": [
+      {
+        "start": 0,
+        "end": 3.72
+      },
+      {
+        "start": 23.72,
+        "end": 26.72
+      },
+      {
+        "start": 46.72,
+        "end": 49.84
+      },
+      {
+        "start": 69.84,
+        "end": 72.42
+      },
+      {
+        "start": 92.42,
+        "end": 94.52
+      },
+      {
+        "start": 114.52,
+        "end": 117.4
+      },
+      {
+        "start": 137.4,
+        "end": 140.36
+      },
+      {
+        "start": 160.36,
+        "end": 162.78
+      },
+      {
+        "start": 182.78,
+        "end": 185.1
+      },
+      {
+        "start": 205.1,
+        "end": 208.18
+      },
+      {
+        "start": 228.18,
+        "end": 230.5
+      },
+      {
+        "start": 250.5,
+        "end": 253.14
+      },
+      {
+        "start": 273.14,
+        "end": 276.02
+      },
+      {
+        "start": 296.02,
+        "end": 298.46
+      },
+      {
+        "start": 318.46,
+        "end": 321.86
+      },
+      {
+        "start": 341.86,
+        "end": 344.54
+      },
+      {
+        "start": 364.54,
+        "end": 367.44
+      },
+      {
+        "start": 387.44,
+        "end": 389.72
+      },
+      {
+        "start": 409.72,
+        "end": 412.08
+      },
+      {
+        "start": 432.08,
+        "end": 435.68
+      }
+    ]
+  },
+  "set2": {
+    "title": "세트 2",
+    "audio": "세트2_문장간격20초.wav",
+    "questions": [
+      {
+        "number": 1,
+        "choices": {
+          "A": "I meant to, but I got caught up in another meeting.",
+          "B": "He revised it yesterday.",
+          "C": "The draft needs more references.",
+          "D": "I saw him in the hallway."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 2,
+        "choices": {
+          "A": "They rejected the last one immediately.",
+          "B": "It depends on their concerns.",
+          "C": "The proposal is twenty pages long.",
+          "D": "I already printed three copies."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 3,
+        "choices": {
+          "A": "It was due to an unexpected delay.",
+          "B": "I checked the inventory list.",
+          "C": "It was scheduled for today.",
+          "D": "The equipment is expensive."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 4,
+        "choices": {
+          "A": "I've been thinking about it lately.",
+          "B": "The course is on Tuesdays.",
+          "C": "I dropped it last semester.",
+          "D": "It's a required class."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 5,
+        "choices": {
+          "A": "Apparently, they required a hard copy.",
+          "B": "The website is easy to use.",
+          "C": "I submitted mine yesterday.",
+          "D": "The deadline is Friday."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 6,
+        "choices": {
+          "A": "I had to read it twice to understand it.",
+          "B": "The policy was announced yesterday.",
+          "C": "I prefer the old system.",
+          "D": "It's posted on the website."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 7,
+        "choices": {
+          "A": "Only if the final results come in today.",
+          "B": "The experiment was difficult.",
+          "C": "Friday is a holiday.",
+          "D": "We started it last week."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 8,
+        "choices": {
+          "A": "I didn't think it was the right time.",
+          "B": "The meeting ended early.",
+          "C": "The budget was approved.",
+          "D": "I prepared the slides."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 9,
+        "choices": {
+          "A": "I didn't attend the lecture.",
+          "B": "I'll email them to you tonight.",
+          "C": "The lecture was interesting.",
+          "D": "I prefer handwritten notes."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 10,
+        "choices": {
+          "A": ".I expected better equipment.",
+          "B": "Not exactly, no",
+          "C": "The results were posted online.",
+          "D": "They took longer than expected."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 11,
+        "choices": {
+          "A": "The report is already formatted.",
+          "B": "That might prevent unnecessary corrections later.",
+          "C": "I submitted mine yesterday before verifying it.",
+          "D": "The deadline is approaching."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 12,
+        "choices": {
+          "A": "I need to register today.",
+          "B": "It usually closes at five.",
+          "C": "The office is crowded.",
+          "D": "I forgot my ID."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 13,
+        "choices": {
+          "A": "The funding was reduced this year.",
+          "B": "Given last year's performance, it seems promising.",
+          "C": "I filled out the application.",
+          "D": "It expires in December."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 14,
+        "choices": {
+          "A": "The appendix is very detailed.",
+          "B": "I double-checked before sending it.",
+          "C": "I sent it this morning.",
+          "D": "It's a long document."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 15,
+        "choices": {
+          "A": "The classroom is small.",
+          "B": "Attendance was mandatory.",
+          "C": "The schedule changed unexpectedly.",
+          "D": "I attended last week."
+        },
+        "answer": "C"
+      },
+      {
+        "number": 16,
+        "choices": {
+          "A": "I cited three articles.",
+          "B": "The sources are reliable.",
+          "C": "Only with the professor's approval.",
+          "D": "The citation style is based on international standards."
+        },
+        "answer": "C"
+      },
+      {
+        "number": 17,
+        "choices": {
+          "A": "I arrived early at nine.",
+          "B": "It lasted two hours.",
+          "C": "They pushed it back an hour.",
+          "D": "The workshop was helpful."
+        },
+        "answer": "C"
+      },
+      {
+        "number": 18,
+        "choices": {
+          "A": "I already finished mine",
+          "B": "The deadline is tomorrow.",
+          "C": ".It might relieve some pressure.",
+          "D": "Extensions are rare."
+        },
+        "answer": "C"
+      },
+      {
+        "number": 19,
+        "choices": {
+          "A": "The email was short",
+          "B": "I checked my inbox.",
+          "C": ".It may still be processing.",
+          "D": "I sent one earlier."
+        },
+        "answer": "C"
+      },
+      {
+        "number": 20,
+        "choices": {
+          "A": "I delayed my submission.",
+          "B": "The approval letter arrived yesterday.",
+          "C": "It certainly won't improve them.",
+          "D": "The chance is small."
+        },
+        "answer": "C"
+      }
+    ],
+    "timings": [
+      {
+        "start": 0,
+        "end": 3.44
+      },
+      {
+        "start": 23.44,
+        "end": 26.38
+      },
+      {
+        "start": 46.38,
+        "end": 49.58
+      },
+      {
+        "start": 69.58,
+        "end": 71.82
+      },
+      {
+        "start": 91.82,
+        "end": 95.14
+      },
+      {
+        "start": 115.14,
+        "end": 117.62
+      },
+      {
+        "start": 137.62,
+        "end": 140.62
+      },
+      {
+        "start": 160.62,
+        "end": 163.4
+      },
+      {
+        "start": 183.4,
+        "end": 186.18
+      },
+      {
+        "start": 206.18,
+        "end": 208.78
+      },
+      {
+        "start": 228.78,
+        "end": 231.86
+      },
+      {
+        "start": 251.86,
+        "end": 254.4
+      },
+      {
+        "start": 274.4,
+        "end": 277.52
+      },
+      {
+        "start": 297.52,
+        "end": 300.2
+      },
+      {
+        "start": 320.2,
+        "end": 322.98
+      },
+      {
+        "start": 342.98,
+        "end": 345.54
+      },
+      {
+        "start": 365.54,
+        "end": 368.1
+      },
+      {
+        "start": 388.1,
+        "end": 390.66
+      },
+      {
+        "start": 410.66,
+        "end": 413.3
+      },
+      {
+        "start": 433.3,
+        "end": 435.84
+      }
+    ]
+  },
+  "set3": {
+    "title": "세트 3",
+    "audio": "세트3_문장간격20초.wav",
+    "questions": [
+      {
+        "number": 21,
+        "choices": {
+          "A": "I've rehearsed it several times.",
+          "B": "The presentation is tomorrow.",
+          "C": "I made the slides for the presentation.",
+          "D": "It's about climate change."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 22,
+        "choices": {
+          "A": "They disagreed with our conclusion.",
+          "B": "The argument is strong.",
+          "C": "It's well organized.",
+          "D": "Issues with the inspection are common."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 23,
+        "choices": {
+          "A": "That's what the notice said.",
+          "B": "I was there yesterday.",
+          "C": "The lab is on the second floor.",
+          "D": "Maintenance takes time."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 24,
+        "choices": {
+          "A": "Not if everything meets the regulations.",
+          "B": "The inspection is thorough.",
+          "C": "I inspected it yesterday.",
+          "D": "Issues are common."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 25,
+        "choices": {
+          "A": "I wasn't aware of the deadline.",
+          "B": "The internship is competitive.",
+          "C": "I applied online.",
+          "D": "It starts in June."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 26,
+        "choices": {
+          "A": "Every single clause.",
+          "B": "The contract is lengthy.",
+          "C": "I signed it yesterday.",
+          "D": "It was printed twice."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 27,
+        "choices": {
+          "A": "It's a strong possibility.",
+          "B": "The software was updated.",
+          "C": "Data loss is serious.",
+          "D": "I saved the file."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 28,
+        "choices": {
+          "A": "Some of them asked for clarification.",
+          "B": "The instructions were printed.",
+          "C": "Participants arrived early.",
+          "D": "I wrote the instructions."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 29,
+        "choices": {
+          "A": "We're still gathering the final numbers.",
+          "B": "I know that statistics are important.",
+          "C": "The proposal is short.",
+          "D": "I submitted it already."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 30,
+        "choices": {
+          "A": "Given the circumstances, probably not.",
+          "B": "Funding is limited.",
+          "C": "I requested it before.",
+          "D": "The budget is tight."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 31,
+        "choices": {
+          "A": "Noon is late.",
+          "B": "The files are large.",
+          "C": "I sent mine.",
+          "D": "She said she would."
+        },
+        "answer": "D"
+      },
+      {
+        "number": 32,
+        "choices": {
+          "A": "Confidence is important.",
+          "B": "The theory is complex.",
+          "C": "I studied it yesterday.",
+          "D": "The evidence seems consistent so far."
+        },
+        "answer": "D"
+      },
+      {
+        "number": 33,
+        "choices": {
+          "A": "It's already scheduled.",
+          "B": "The vote is important.",
+          "C": "Everyone is busy.",
+          "D": "Thatwouldensure fairness."
+        },
+        "answer": "D"
+      },
+      {
+        "number": 34,
+        "choices": {
+          "A": "It's on the desk.",
+          "B": "The printer is new.",
+          "C": "I printed something earlier.",
+          "D": "It hasn't been serviced in months."
+        },
+        "answer": "D"
+      },
+      {
+        "number": 35,
+        "choices": {
+          "A": "I analyzed them.",
+          "B": "Statistics are confusing.",
+          "C": "The results were published.",
+          "D": "They fall just below the threshold."
+        },
+        "answer": "D"
+      },
+      {
+        "number": 36,
+        "choices": {
+          "A": "That's entirely possible.",
+          "B": "The instructions were clear.",
+          "C": "I read them.",
+          "D": "They were long."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 37,
+        "choices": {
+          "A": "It was arranged months ago.",
+          "B": "The conference is annual.",
+          "C": "I attend every year.",
+          "D": "The schedule is tight."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 38,
+        "choices": {
+          "A": "I thought it was reasonable.",
+          "B": "The decision was final.",
+          "C": "I arrived late.",
+          "D": "It was discussed earlier."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 39,
+        "choices": {
+          "A": "It could affect the reliability.",
+          "B": "The sample is large.",
+          "C": "I reduced it.",
+          "D": "Thestudy is long."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 40,
+        "choices": {
+          "A": "The participants interpreted the questions differently.",
+          "B": "The survey was short but trustworthy.",
+          "C": "I conducted it online.",
+          "D": "Results were surprising."
+        },
+        "answer": "A"
+      }
+    ],
+    "timings": [
+      {
+        "start": 21.04,
+        "end": 23.5
+      },
+      {
+        "start": 43.5,
+        "end": 44.32
+      },
+      {
+        "start": 64.32,
+        "end": 67.1
+      },
+      {
+        "start": 87.1,
+        "end": 87.92
+      },
+      {
+        "start": 107.92,
+        "end": 110.44
+      },
+      {
+        "start": 130.44,
+        "end": 131.24
+      },
+      {
+        "start": 151.24,
+        "end": 154.16
+      },
+      {
+        "start": 174.16,
+        "end": 174.88
+      },
+      {
+        "start": 194.88,
+        "end": 197.56
+      },
+      {
+        "start": 217.56,
+        "end": 218.44
+      },
+      {
+        "start": 238.44,
+        "end": 241.28
+      },
+      {
+        "start": 261.28,
+        "end": 262.12
+      },
+      {
+        "start": 282.12,
+        "end": 285.16
+      },
+      {
+        "start": 305.16,
+        "end": 305.9
+      },
+      {
+        "start": 325.9,
+        "end": 329.2
+      },
+      {
+        "start": 349.2,
+        "end": 350.02
+      },
+      {
+        "start": 370.02,
+        "end": 374.52
+      },
+      {
+        "start": 394.52,
+        "end": 399.22
+      },
+      {
+        "start": 419.22,
+        "end": 421.84
+      },
+      {
+        "start": 441.84,
+        "end": 442.62
+      }
+    ]
+  },
+  "set4": {
+    "title": "세트 4",
+    "audio": "세트4_문장간격20초.wav",
+    "questions": [
+      {
+        "number": 41,
+        "choices": {
+          "A": "I submitted mine early.",
+          "B": "It shut down at midnight.",
+          "C": "The portal is online.",
+          "D": "It's easy to use."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 42,
+        "choices": {
+          "A": "It was very difficult.",
+          "B": "I started weeks in advance.",
+          "C": "I finished it.",
+          "D": "Quickly is good."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 43,
+        "choices": {
+          "A": "The calculation is complex.",
+          "B": "Quite dramatically, actually.",
+          "C": "I used a calculator.",
+          "D": "The conclusion is strong."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 44,
+        "choices": {
+          "A": "Participants arrived late.",
+          "B": "The announcement was delayed.",
+          "C": "I informed them.",
+          "D": "It happened yesterday."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 45,
+        "choices": {
+          "A": "The source is online.",
+          "B": "It has been peer-reviewed.",
+          "C": "I cited it.",
+          "D": "Credibility matters."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 46,
+        "choices": {
+          "A": "It might yield more consistent data.",
+          "B": "Accuracy is important.",
+          "C": "I prefer this method.",
+          "D": "The data is collected."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 47,
+        "choices": {
+          "A": "Yes, but we underestimated it.",
+          "B": "The supervisor left early.",
+          "C": "The issue is minor.",
+          "D": "I warned him."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 48,
+        "choices": {
+          "A": "By the end of next week, I’ve heard.",
+          "B": "The final decision is important.",
+          "C": "I made a decision.",
+          "D": "It was finalized."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 49,
+        "choices": {
+          "A": "In light of the data, perhaps.",
+          "B": "The hypothesis is original.",
+          "C": "I wrote it.",
+          "D": "It's in the introduction."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 50,
+        "choices": {
+          "A": "We may need to revise it.",
+          "B": "The data is extensive.",
+          "C": "I collected the data.",
+          "D": "The conclusion is brief."
+        },
+        "answer": "A"
+      }
+    ],
+    "timings": [
+      {
+        "start": 21.04,
+        "end": 21.78
+      },
+      {
+        "start": 41.78,
+        "end": 44.4
+      },
+      {
+        "start": 64.4,
+        "end": 66.78
+      },
+      {
+        "start": 86.78,
+        "end": 89.94
+      },
+      {
+        "start": 109.94,
+        "end": 113.02
+      },
+      {
+        "start": 133.02,
+        "end": 136.82
+      },
+      {
+        "start": 156.82,
+        "end": 159.98
+      },
+      {
+        "start": 179.98,
+        "end": 182.86
+      },
+      {
+        "start": 202.86,
+        "end": 205.7
+      },
+      {
+        "start": 225.7,
+        "end": 228.84
+      }
+    ]
+  },
+  "set5": {
+    "title": "세트 5",
+    "audio": "세트5_문장간격20초.wav",
+    "questions": [
+      {
+        "number": 1,
+        "choices": {
+          "A": "He mentioned it briefly during our meeting.",
+          "B": "The methodology is detailed.",
+          "C": "I revised it already.",
+          "D": "Recommendations are often helpful."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 2,
+        "choices": {
+          "A": "The presentation is important.",
+          "B": "No, this time we'll stick to the schedule.",
+          "C": "It was postponed before.",
+          "D": "I'm considering several options."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 3,
+        "choices": {
+          "A": "The survey is online.",
+          "B": "They’re already short and detailed.",
+          "C": "That might increase accuracy.",
+          "D": "I wrote the questions."
+        },
+        "answer": "C"
+      },
+      {
+        "number": 4,
+        "choices": {
+          "A": "Grades are important.",
+          "B": "It may still be under review.",
+          "C": "I checked the website.",
+          "D": "Posting takes time."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 5,
+        "choices": {
+          "A": "It was moved to next month.",
+          "B": "The conference is annual.",
+          "C": "This week is busy with the conference.",
+          "D": "I attended last year."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 6,
+        "choices": {
+          "A": "The outcome was unexpected.",
+          "B": "Sample size matters in studies like this.",
+          "C": "It was smaller than usual.",
+          "D": "That's quite possible."
+        },
+        "answer": "D"
+      },
+      {
+        "number": 7,
+        "choices": {
+          "A": "The budget was tight.",
+          "B": "We might be slightly over.",
+          "C": "Expenses are rising.",
+          "D": "I reviewed the numbers."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 8,
+        "choices": {
+          "A": "Yes, I received a confirmation email.",
+          "B": "Reservations are online.",
+          "C": "I called them yesterday.",
+          "D": "The administrator was busy."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 9,
+        "choices": {
+          "A": "Our sources are peer-reviewed.",
+          "B": "Asking questions is essential.",
+          "C": "Perhaps they expected more recent references.",
+          "D": "I cited several articles."
+        },
+        "answer": "C"
+      },
+      {
+        "number": 10,
+        "choices": {
+          "A": "The project is demanding.",
+          "B": "It's due soon.",
+          "C": "That could relieve some pressure.",
+          "D": "I often check deadlines."
+        },
+        "answer": "C"
+      },
+      {
+        "number": 11,
+        "choices": {
+          "A": "She went over them in detail.",
+          "B": "The criteria are strict.",
+          "C": "I understood most of it.",
+          "D": "Explanations are helpful."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 12,
+        "choices": {
+          "A": "The system was updated recently.",
+          "B": "Maybe users are still adjusting to it.",
+          "C": "Efficiency is important.",
+          "D": "I logged in earlier."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 13,
+        "choices": {
+          "A": "Optimism can be motivating.",
+          "B": "They're based on pastdata.",
+          "C": "They might not reflect reality.",
+          "D": "Assumptions are necessary."
+        },
+        "answer": "C"
+      },
+      {
+        "number": 14,
+        "choices": {
+          "A": "I submitted them this morning.",
+          "B": "Consent forms are required.",
+          "C": "I almost forgot.",
+          "D": "They're in my folder."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 15,
+        "choices": {
+          "A": "The change was sudden.",
+          "B": "Employees resisted the new rules.",
+          "C": "Productivity is measured monthly.",
+          "D": "It declined sharply."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 16,
+        "choices": {
+          "A": "Results were surprising.",
+          "B": "A flaw would explain the inconsistency.",
+          "C": "The design is innovative.",
+          "D": "Possibly, if variables weren't controlled."
+        },
+        "answer": "D"
+      },
+      {
+        "number": 17,
+        "choices": {
+          "A": "It was discussedextensively.",
+          "B": "Approval takes time.",
+          "C": "Yes, without major revisions.",
+          "D": "I revised mine."
+        },
+        "answer": "C"
+      },
+      {
+        "number": 18,
+        "choices": {
+          "A": "The literature review is comprehensive.",
+          "B": "That would strengthen our argument.",
+          "C": "I reviewed several sources.",
+          "D": "Thoroughness is important."
+        },
+        "answer": "B"
+      },
+      {
+        "number": 19,
+        "choices": {
+          "A": "Iremoved redundant sections.",
+          "B": "It appears more concise now.",
+          "C": "The original was lengthy.",
+          "D": "Drafts evolve over time."
+        },
+        "answer": "A"
+      },
+      {
+        "number": 20,
+        "choices": {
+          "A": "Difficult questions are expected.",
+          "B": "I've prepared for potential challenges.",
+          "C": "The presentation is tomorrow.",
+          "D": "Preparation is key."
+        },
+        "answer": "B"
+      }
+    ],
+    "timings": [
+      {
+        "start": 0,
+        "end": 4.4
+      },
+      {
+        "start": 24.4,
+        "end": 28.48
+      },
+      {
+        "start": 48.48,
+        "end": 51.36
+      },
+      {
+        "start": 71.36,
+        "end": 74.54
+      },
+      {
+        "start": 94.54,
+        "end": 98.2
+      },
+      {
+        "start": 118.2,
+        "end": 121.1
+      },
+      {
+        "start": 141.1,
+        "end": 143.86
+      },
+      {
+        "start": 163.86,
+        "end": 168.06
+      },
+      {
+        "start": 188.06,
+        "end": 191.52
+      },
+      {
+        "start": 211.52,
+        "end": 214.5
+      },
+      {
+        "start": 234.5,
+        "end": 238.14
+      },
+      {
+        "start": 258.14,
+        "end": 261.56
+      },
+      {
+        "start": 281.56,
+        "end": 284.3
+      },
+      {
+        "start": 304.3,
+        "end": 307.5
+      },
+      {
+        "start": 327.5,
+        "end": 331.48
+      },
+      {
+        "start": 351.48,
+        "end": 355.7
+      },
+      {
+        "start": 375.7,
+        "end": 379.1
+      },
+      {
+        "start": 399.1,
+        "end": 402.3
+      },
+      {
+        "start": 422.3,
+        "end": 426.08
+      },
+      {
+        "start": 446.08,
+        "end": 449.68
+      }
+    ]
+  }
+};
+    const menu = document.getElementById("menu");
+    const app = document.getElementById("app");
+    const setGrid = document.getElementById("setGrid");
+    const clearAllAnswers = document.getElementById("clearAllAnswers");
+    const setTitle = document.getElementById("setTitle");
+    const questionList = document.getElementById("questionList");
+    const progressBar = document.getElementById("progressBar");
+    const doneCount = document.getElementById("doneCount");
+    const totalCount = document.getElementById("totalCount");
+    const audio = document.getElementById("audio");
+    const timeNow = document.getElementById("timeNow");
+    const listenMode = document.getElementById("listenMode");
+    const questionTitle = document.getElementById("questionTitle");
+    const timeRange = document.getElementById("timeRange");
+    const choices = document.getElementById("choices");
+    const resultBox = document.getElementById("resultBox");
+    const showSetResults = document.getElementById("showSetResults");
+    const resultsPage = document.getElementById("resultsPage");
+    const resultsTitle = document.getElementById("resultsTitle");
+    const resultsSummary = document.getElementById("resultsSummary");
+    const scoreCorrect = document.getElementById("scoreCorrect");
+    const scoreWrong = document.getElementById("scoreWrong");
+    const scoreBlank = document.getElementById("scoreBlank");
+    const reviewBody = document.getElementById("reviewBody");
+
+    let activeSetKey = "set1";
+    let activeSet = SETS[activeSetKey];
+    let current = 0;
+    let mode = "single";
+    let state = loadState(activeSetKey);
+    let finalCountdownTimer = null;
+    let finalCountdownInterval = null;
+
+    function loadState(key) {
+      const count = SETS[key].questions.length;
+      const parsed = JSON.parse(localStorage.getItem("listening-" + key + "-state") || "{}");
+      parsed.status ||= Array(count).fill("");
+      parsed.selected ||= Array(count).fill("");
+      parsed.revealed ||= Array(count).fill(false);
+      return parsed;
+    }
+
+    function save() {
+      localStorage.setItem("listening-" + activeSetKey + "-state", JSON.stringify(state));
+    }
+
+    function clearFinalCountdown() {
+      if (finalCountdownTimer) clearTimeout(finalCountdownTimer);
+      if (finalCountdownInterval) clearInterval(finalCountdownInterval);
+      finalCountdownTimer = null;
+      finalCountdownInterval = null;
+    }
+
+    function formatTime(seconds) {
+      const safe = Math.max(0, Math.floor(seconds || 0));
+      return String(Math.floor(safe / 60)).padStart(2, "0") + ":" + String(safe % 60).padStart(2, "0");
+    }
+
+    function showMenu() {
+      clearFinalCountdown();
+      audio.pause();
+      menu.style.display = "grid";
+      app.style.display = "none";
+      resultsPage.style.display = "none";
+      renderMenu();
+    }
+
+    function openSet(key) {
+      clearFinalCountdown();
+      activeSetKey = key;
+      activeSet = SETS[key];
+      current = 0;
+      mode = "single";
+      state = loadState(key);
+      audio.src = activeSet.audio;
+      setTitle.textContent = activeSet.title;
+      totalCount.textContent = activeSet.questions.length;
+      menu.style.display = "none";
+      app.style.display = "grid";
+      resultsPage.style.display = "none";
+      selectQuestion(0, true);
+    }
+
+    function renderMenu() {
+      setGrid.innerHTML = "";
+      Object.entries(SETS).forEach(([key, set]) => {
+        const saved = loadState(key);
+        const done = saved.status.filter((item) => item === "done").length;
+        const button = document.createElement("button");
+        button.className = "set-card";
+        button.innerHTML = "<span><strong>" + set.title + "</strong><span class=\"sub\">" + set.questions.length + "문제 · " + done + "/" + set.questions.length + " 완료</span></span><span class=\"sub\">" + set.audio + "</span>";
+        button.addEventListener("click", () => openSet(key));
+        setGrid.appendChild(button);
+      });
+    }
+
+    function renderList() {
+      questionList.innerHTML = "";
+      activeSet.questions.forEach((question, index) => {
+        const button = document.createElement("button");
+        button.className = "question-btn " + (index === current ? "active" : "") + " " + (state.status[index] || "");
+        const status = state.status[index] === "done" ? "맞음" : state.status[index] === "review" ? "복습" : "";
+        button.innerHTML = "<span class=\"num\">" + (index + 1) + "</span><span>문제 " + question.number + "</span><span>" + status + "</span>";
+        button.addEventListener("click", () => selectQuestion(index, true));
+        questionList.appendChild(button);
+      });
+    }
+
+    function renderProgress() {
+      const done = state.status.filter((item) => item === "done").length;
+      doneCount.textContent = done;
+      progressBar.style.width = (done / activeSet.questions.length * 100) + "%";
+    }
+
+    function renderChoices() {
+      choices.innerHTML = "";
+      const question = activeSet.questions[current];
+      const revealed = state.revealed[current];
+      Object.entries(activeSet.questions[current].choices).forEach(([letter, text]) => {
+        const button = document.createElement("button");
+        let className = "choice " + (state.selected[current] === letter ? "selected" : "");
+        if (revealed && letter === question.answer) className += " correct";
+        if (revealed && state.selected[current] === letter && letter !== question.answer) className += " wrong";
+        button.className = className;
+        button.innerHTML = "<span class=\"letter\">" + letter + "</span><span>" + text + "</span>";
+        button.addEventListener("click", () => {
+          state.selected[current] = state.selected[current] === letter ? "" : letter;
+          state.revealed[current] = false;
+          save();
+          renderChoices();
+          renderResult();
+        });
+        choices.appendChild(button);
+      });
+    }
+
+    function renderResult() {
+      const question = activeSet.questions[current];
+      const selected = state.selected[current];
+      resultBox.className = "result";
+      resultBox.textContent = "";
+      if (!state.revealed[current]) return;
+      const correctText = question.choices[question.answer] || "";
+      const isCorrect = selected === question.answer;
+      resultBox.className = "result " + (isCorrect ? "correct" : "wrong");
+      resultBox.textContent = isCorrect
+        ? "정답입니다. 정답: " + question.answer + ". " + correctText
+        : "오답입니다. 정답: " + question.answer + ". " + correctText;
+    }
+
+    function selectQuestion(index, seek = false) {
+      clearFinalCountdown();
+      current = Math.min(activeSet.questions.length - 1, Math.max(0, index));
+      const timing = activeSet.timings[current] || { start: 0, end: 0 };
+      const question = activeSet.questions[current];
+      questionTitle.textContent = "문제 " + question.number;
+      timeRange.textContent = "문장 " + formatTime(timing.start) + " · 풀이 " + formatTime(timing.end) + "부터";
+      renderList();
+      renderProgress();
+      renderChoices();
+      renderResult();
+      const isLastQuestion = current === activeSet.questions.length - 1;
+      showSetResults.style.display = isLastQuestion ? "inline-grid" : "none";
+      document.getElementById("nextQuestion").textContent = isLastQuestion ? "세트 정답 확인" : "다음";
+      save();
+      if (seek) audio.currentTime = timing.start;
+    }
+
+    function playCurrent() {
+      clearFinalCountdown();
+      const timing = activeSet.timings[current] || { start: 0 };
+      mode = "single";
+      listenMode.textContent = "자동 진행";
+      audio.currentTime = timing.start;
+      audio.play();
+    }
+
+    document.getElementById("backToMenu").addEventListener("click", showMenu);
+    clearAllAnswers.addEventListener("click", () => {
+      if (!confirm("모든 세트의 선택한 답과 채점 기록을 지울까요?")) return;
+      Object.keys(SETS).forEach((key) => localStorage.removeItem("listening-" + key + "-state"));
+      state = loadState(activeSetKey);
+      renderMenu();
+    });
+    document.getElementById("repeatCurrent").addEventListener("click", playCurrent);
+    document.getElementById("pauseAudio").addEventListener("click", () => {
+      audio.pause();
+      listenMode.textContent = "일시정지";
+    });
+    document.getElementById("checkAnswer").addEventListener("click", () => {
+      state.revealed[current] = true;
+      const question = activeSet.questions[current];
+      if (state.selected[current] === question.answer) state.status[current] = "done";
+      else state.status[current] = "review";
+      save();
+      renderChoices();
+      renderResult();
+      renderList();
+      renderProgress();
+    });
+    document.getElementById("prevQuestion").addEventListener("click", () => selectQuestion(current - 1, true));
+    document.getElementById("nextQuestion").addEventListener("click", () => {
+      if (current === activeSet.questions.length - 1) showResults();
+      else selectQuestion(current + 1, true);
+    });
+    showSetResults.addEventListener("click", showResults);
+    document.getElementById("clearStatus").addEventListener("click", () => {
+      state.status[current] = "";
+      state.selected[current] = "";
+      state.revealed[current] = false;
+      save();
+      selectQuestion(current);
+    });
+
+    function showResults() {
+      clearFinalCountdown();
+      audio.pause();
+      save();
+      let correct = 0;
+      let wrong = 0;
+      let blank = 0;
+      reviewBody.innerHTML = "";
+
+      activeSet.questions.forEach((question, index) => {
+        const selected = state.selected[index] || "";
+        const isBlank = !selected;
+        const isCorrect = selected === question.answer;
+        if (isBlank) blank++;
+        else if (isCorrect) correct++;
+        else wrong++;
+
+        const row = document.createElement("tr");
+        row.className = isBlank ? "blank-row" : isCorrect ? "correct-row" : "wrong-row";
+        row.innerHTML =
+          "<td>문제 " + question.number + "</td>" +
+          "<td>" + (selected || "-") + "</td>" +
+          "<td>" + question.answer + "</td>" +
+          "<td>" + (isBlank ? "미응답" : isCorrect ? "정답" : "오답") + "</td>";
+        reviewBody.appendChild(row);
+      });
+
+      resultsTitle.textContent = activeSet.title + " 결과";
+      resultsSummary.textContent = "총 " + activeSet.questions.length + "문제 중 " + correct + "문제 정답";
+      scoreCorrect.textContent = correct;
+      scoreWrong.textContent = wrong;
+      scoreBlank.textContent = blank;
+      menu.style.display = "none";
+      app.style.display = "none";
+      resultsPage.style.display = "grid";
+      listenMode.textContent = "세트 완료";
+    }
+
+    function startFinalCountdown() {
+      clearFinalCountdown();
+      let remaining = 20;
+      listenMode.textContent = "풀이 시간 " + remaining + "초";
+      finalCountdownInterval = setInterval(() => {
+        remaining--;
+        listenMode.textContent = "풀이 시간 " + Math.max(0, remaining) + "초";
+      }, 1000);
+      finalCountdownTimer = setTimeout(showResults, 20000);
+    }
+
+    document.getElementById("resultsBackToSet").addEventListener("click", () => {
+      resultsPage.style.display = "none";
+      menu.style.display = "none";
+      app.style.display = "grid";
+      selectQuestion(current, true);
+    });
+
+    document.getElementById("resultsBackToMenu").addEventListener("click", showMenu);
+
+    audio.addEventListener("timeupdate", () => {
+      timeNow.textContent = formatTime(audio.currentTime);
+      while (current < activeSet.questions.length - 1 && activeSet.timings[current + 1] && audio.currentTime >= activeSet.timings[current + 1].start - 0.1) {
+        selectQuestion(current + 1, false);
+      }
+
+      const timing = activeSet.timings[current] || { start: 0, end: audio.currentTime };
+      const nextStart = current < activeSet.questions.length - 1 && activeSet.timings[current + 1]
+        ? activeSet.timings[current + 1].start
+        : timing.end + 20;
+      const isAnswerTime = audio.currentTime >= timing.end;
+      const remaining = Math.max(0, nextStart - Math.max(audio.currentTime, timing.end));
+      listenMode.textContent = isAnswerTime ? "풀이 시간 " + Math.ceil(remaining) + "초" : "듣는 중";
+
+      if (current === activeSet.questions.length - 1 && audio.currentTime >= nextStart) {
+        showResults();
+      }
+    });
+
+    audio.addEventListener("ended", () => {
+      if (current === activeSet.questions.length - 1) startFinalCountdown();
+      else showResults();
+    });
+
+    renderMenu();
+  </script>
+</body>
+</html>
